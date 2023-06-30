@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-
 	"github.com/YuvrajSingh3110/bookstore/pkg/models"
 	"github.com/YuvrajSingh3110/bookstore/pkg/utils"
 	"github.com/gorilla/mux"
@@ -38,8 +37,11 @@ func GetBookById(w http.ResponseWriter, r *http.Request) {
 func CreateBook(w http.ResponseWriter, r *http.Request) {
 	CreateBook := &models.Book{}
 	utils.ParseBody(r, CreateBook)
-	b := CreateBook.CreateBook
-	res, _ := json.Marshal(b)
+	b := CreateBook.CreateBook()
+	res, err := json.Marshal(b)
+	if err != nil {
+		fmt.Println("Error while creating book: ", err)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(res)
