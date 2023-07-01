@@ -3,5 +3,6 @@ go 1.20
 use (
 	"./Book Store"
 	"./Email Verifier Tool"
+	"./Go-Fibre Simple CRM"
 	./Loadbalancer
 )
