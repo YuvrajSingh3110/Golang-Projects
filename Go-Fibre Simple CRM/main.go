@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	database "github.com/YuvrajSingh3110/go-fibre_simple_CRM/Database"
-	lead "github.com/YuvrajSingh3110/go-fibre_simple_CRM/Lead"
+	"github.com/YuvrajSingh3110/go-fibre_simple_CRM/database"
+	"github.com/YuvrajSingh3110/go-fibre_simple_CRM/lead"
 	"github.com/gofiber/fiber"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -21,7 +21,7 @@ func initDatabase() {
 	var err error
 	database.DBConn, err = gorm.Open("sqlite3", "leads.db")
 	if err != nil {
-		panic(err)
+		panic("Failed to connect database")
 	}
 	fmt.Println("Connected to database...")
 	database.DBConn.AutoMigrate(&lead.Lead{})
@@ -29,6 +29,7 @@ func initDatabase() {
 }
 
 func main() {
+	fmt.Println("CRM basic api")
 	app := fiber.New()
 	initDatabase()
 	defer database.DBConn.Close()
