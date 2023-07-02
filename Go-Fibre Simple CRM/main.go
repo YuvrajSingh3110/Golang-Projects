@@ -4,15 +4,17 @@ import (
 	"fmt"
 
 	database "github.com/YuvrajSingh3110/go-fibre_simple_CRM/Database"
+	lead "github.com/YuvrajSingh3110/go-fibre_simple_CRM/Lead"
 	"github.com/gofiber/fiber"
 	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 func setupRoutes(app *fiber.App) {
-	app.Get(GetLeads)
-	app.Get(GetOneLead)
-	app.Post(NewLead)
-	app.Delete(DeleteLead)
+	app.Get("api/v1/lead", lead.GetLeads)
+	app.Get("api/v1/lead/:id", lead.GetOneLead)
+	app.Post("api/v1/lead", lead.NewLead)
+	app.Delete("api/v1/lead/:id", lead.DeleteLead)
 }
 
 func initDatabase() {
