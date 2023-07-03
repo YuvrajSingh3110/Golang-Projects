@@ -2,6 +2,7 @@ go 1.20
 
 use (
 	"./Book Store"
+	"./Building Cache"
 	"./Email Verifier Tool"
 	"./Go-Fibre Simple CRM"
 	./Loadbalancer
