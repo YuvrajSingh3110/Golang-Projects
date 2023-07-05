@@ -3,7 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"sync"
+
+	"github.com/jcelliott/lumber"
 )
 
 const Version = "1.0.0"
@@ -26,32 +31,142 @@ type (
 	}
 )
 
-type options struct {
+type Options struct {
 	Logger
 }
 
-func New() {
+func New(dir string, options *Options) (*Driver, error) {
+	dir = filepath.Clean(dir)
+	opt := Options{}
+	if options != nil {
+		opt = *options
+	}
 
+	if opt.Logger == nil {
+		opt.Logger = lumber.NewConsoleLogger((lumber.Info))
+	}
+	driver := Driver{
+		dir:     dir,
+		mutexes: make(map[string]*sync.Mutex),
+		log:     opt.Logger,
+	}
+	if _, err := os.Stat(dir); err == nil {
+		opt.Logger.Debug("Using %s (database already exists)\n", dir)
+		return &driver, nil
+	}
+	opt.Logger.Debug("Creating database at %s...\n", dir)
+	return &driver, os.MkdirAll(dir, 0755) //0755 is access permission
 }
 
-func Write() error {
+func (d *Driver) Write(collection, resource string, v interface{}) error {
+	if collection == "" {
+		return fmt.Errorf("Missing collection - no place to store records")
+	}
+	if resource == "" {
+		return fmt.Errorf("Missing resource - no name")
+	}
 
+	mutex := d.getOrCreateMutex(collection)
+	mutex.Lock()
+	defer mutex.Unlock()
+	dir := filepath.Join(d.dir, collection)
+	fnlPath := filepath.Join(dir, resource+".json")
+	tmpPath := fnlPath + ".tmp"
+
+	if err := os.Mkdir(dir, 0755); err != nil {
+		return err
+	}
+
+	b, err := json.MarshalIndent(v, "", "\t")
+	if err != nil {
+		return err
+	}
+	b = append(b, byte('\n'))
+	if err := ioutil.WriteFile(tmpPath, b, 0644); err != nil {
+		return err
+	}
+
+	return os.Rename(tmpPath, fnlPath)
 }
 
-func Read() error {
+func (d *Driver) Read(collection, resource string, v interface{}) error {
+	if collection == "" {
+		return fmt.Errorf("Missing collection - unable to read")
+	}
+	if resource == "" {
+		return fmt.Errorf("Missing resource - no name")
+	}
+	record := filepath.Join(d.dir, collection, resource)
+	if _, err := stat(record); err != nil {
+		return err
+	}
 
+	b, err := ioutil.ReadFile(record + ".json")
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(b, &v)
 }
 
-func ReadAll() {
+func (d *Driver) ReadAll(collection string) ([]string, error) {
+	if collection == "" {
+		return nil, fmt.Errorf("Missing collection - unable to read")
+	}
 
+	dir := filepath.Join(d.dir, collection)
+	if _, err := stat(dir); err != nil {
+		return nil, err
+	}
+
+	files, _ := ioutil.ReadDir(dir)
+	var record []string
+	for _, file := range files{
+		b, err := ioutil.ReadFile(filepath.Join(dir, file.Name()))
+		if err != nil{
+			return nil, err
+		}
+		record = append(record, string(b))
+	}
+	return record, nil
 }
 
-func Delete() error {
+func (d *Driver) Delete(collection, resource string) error {
+	path := filepath.Join(collection, resource)
+	mutex := d.getOrCreateMutex(collection)
+	mutex.Lock()
+	defer mutex.Unlock()
 
+	dir := filepath.Join(d.dir, path)
+	switch fi, err := stat(dir);{
+	case fi==nil, err!=nil:
+		return fmt.Errorf("Unable to find file or directory %v", path)
+	case fi.Mode().IsDir():
+		os.RemoveAll(dir)
+	case fi.Mode().IsDir():
+		os.RemoveAll(dir + ".json")
+	}
+	return nil
 }
 
-func getOrCreateMutex() *sync.Mutex {
+func (d *Driver) getOrCreateMutex(collection string) *sync.Mutex {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	m, ok := d.mutexes[collection]
+	if !ok {
+		m = &sync.Mutex{}
+		d.mutexes[collection] = m
+	}
+	return m
+}
 
+
+//to check if the collection or the diectory exists
+func stat(path string) (fi os.FileInfo, err error) {
+	if fi, err = os.Stat(path); os.IsNotExist(err) {
+		fi, err = os.Stat(path + ".json")
+	}
+	return
 }
 
 type Address struct {
@@ -94,7 +209,7 @@ func main() {
 		})
 	}
 
-	records, err := db, ReadAll("users")
+	records, err := db.ReadAll("users")
 	if err != nil {
 		panic(err)
 	}
