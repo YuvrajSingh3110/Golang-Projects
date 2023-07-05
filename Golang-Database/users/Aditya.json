@@ -1,0 +1,12 @@
+{
+	"Name": "Aditya",
+	"Age": 24,
+	"Contact": "6586755763",
+	"Company": "Google",
+	"Address": {
+		"City": "Hyderabad",
+		"State": "Telangana",
+		"Country": "India",
+		"Pincode": 234566
+	}
+}

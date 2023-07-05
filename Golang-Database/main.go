@@ -43,7 +43,7 @@ func New(dir string, options *Options) (*Driver, error) {
 	}
 
 	if opt.Logger == nil {
-		opt.Logger = lumber.NewConsoleLogger((lumber.Info))
+		opt.Logger = lumber.NewConsoleLogger(lumber.INFO)
 	}
 	driver := Driver{
 		dir:     dir,
@@ -121,9 +121,9 @@ func (d *Driver) ReadAll(collection string) ([]string, error) {
 
 	files, _ := ioutil.ReadDir(dir)
 	var record []string
-	for _, file := range files{
+	for _, file := range files {
 		b, err := ioutil.ReadFile(filepath.Join(dir, file.Name()))
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 		record = append(record, string(b))
@@ -138,8 +138,8 @@ func (d *Driver) Delete(collection, resource string) error {
 	defer mutex.Unlock()
 
 	dir := filepath.Join(d.dir, path)
-	switch fi, err := stat(dir);{
-	case fi==nil, err!=nil:
+	switch fi, err := stat(dir); {
+	case fi == nil, err != nil:
 		return fmt.Errorf("Unable to find file or directory %v", path)
 	case fi.Mode().IsDir():
 		os.RemoveAll(dir)
@@ -160,8 +160,7 @@ func (d *Driver) getOrCreateMutex(collection string) *sync.Mutex {
 	return m
 }
 
-
-//to check if the collection or the diectory exists
+// to check if the collection or the diectory exists
 func stat(path string) (fi os.FileInfo, err error) {
 	if fi, err = os.Stat(path); os.IsNotExist(err) {
 		fi, err = os.Stat(path + ".json")
