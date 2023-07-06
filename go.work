@@ -3,6 +3,7 @@ go 1.20
 use (
 	"./Book Store"
 	"./Building Cache"
+	"./CLI Reminder Tool"
 	"./Email Verifier Tool"
 	"./Go-Fibre Simple CRM"
 	./Golang-Database
