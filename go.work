@@ -8,4 +8,5 @@ use (
 	"./Go-Fibre Simple CRM"
 	./Golang-Database
 	./Loadbalancer
+	./Sitemap-Crawler
 )
