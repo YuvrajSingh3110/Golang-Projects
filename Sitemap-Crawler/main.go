@@ -23,6 +23,7 @@ type Parser interface {
 	getSEOData(response *http.Response) (SeoData, error)
 }
 
+//it is an empty struct for implementing default parser
 type DefaultParser struct {
 }
 
@@ -36,7 +37,6 @@ var userAgents = []string{
 }
 
 //it helps our server looks like a browser when making any request to any website
-
 func randomUserAgent() string {
 	rand.Seed(time.Now().Unix())
 	randNum := rand.Int() % len(userAgents) //to randomly select a user agent
@@ -194,8 +194,9 @@ func ScrapeSitemap(URL string, parser Parser, concurrency int) []SeoData {
 }
 
 func main() {
+	fmt.Println("Siremap Crawler")
 	p := DefaultParser{}
-	results := ScrapeSitemap("https://www.quicksprout.com/sitmap.xml", p, 10)
+	results := ScrapeSitemap("https://www.quicksprout.com/sitemap.xml", p, 10)
 	for _, res := range results {
 		fmt.Println(res)
 	}
