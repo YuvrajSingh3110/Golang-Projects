@@ -7,6 +7,7 @@ use (
 	"./Email Verifier Tool"
 	"./Go-Fibre Simple CRM"
 	./Golang-Database
+	./Google-Scrapper
 	./Loadbalancer
 	./Sitemap-Crawler
 )
