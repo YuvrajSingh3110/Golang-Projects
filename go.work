@@ -10,4 +10,5 @@ use (
 	./Google-Scrapper
 	./Loadbalancer
 	./Sitemap-Crawler
+	./Url-Shortener/api
 )
