@@ -1,0 +1,1 @@
+A google scrapper made using golang and goquery package. It takes input as a google search, build its url, scrape client request and then parse the rank, url, title and desc of results. By default the language is 'en', country code is 'com', proxy is nil, pages to parse is 1 and number of results is 30. Every default setting can be changed as per the requirement.
