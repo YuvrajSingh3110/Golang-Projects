@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -8,9 +9,9 @@ import (
 	"github.com/YuvrajSingh3110/Url_Shortener/database"
 	"github.com/YuvrajSingh3110/Url_Shortener/helpers"
 	"github.com/asaskevich/govalidator"
-	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
 type Request struct {
@@ -36,11 +37,14 @@ func ShortenUrl(c *fiber.Ctx) error {
 	//rate limiting
 	r2 := database.CreateClient(1)
 	defer r2.Close()
+
 	//we check for ip address
 	val, err := r2.Get(database.Ctx, c.IP()).Result()
+
 	//if u didn't find any value in the db which means user is using the api for the 1st time
 	if err == redis.Nil {
 		_ = r2.Set(database.Ctx, c.IP(), os.Getenv("API_QUOTA"), 30*60*time.Second).Err()
+		fmt.Println("New user added")
 	} else { //user found
 		val, _ = r2.Get(database.Ctx, c.IP()).Result()
 		valInt, _ := strconv.Atoi(val)
@@ -87,20 +91,20 @@ func ShortenUrl(c *fiber.Ctx) error {
 		body.Expiry = 24
 	}
 
-	err = r.Set(database.Ctx, body.Url, body, body.Expiry*3600*time.Second).Err()
+	err = r.Set(database.Ctx, id, body.Url, body.Expiry*3600*time.Second).Err()
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":"unable to connect to server",
+			"error": "unable to connect to server",
 		})
 	}
 
 	//sending the reponse
 	resp := Response{
-		Url: body.Url,
-		CustomShort: "",
-		Expiry: body.Expiry,
+		Url:            body.Url,
+		CustomShort:    "",
+		Expiry:         body.Expiry,
 		XRateRemaining: 10,
-		XRateReset: 30,
+		XRateReset:     30,
 	}
 
 	r2.Decr(database.Ctx, c.IP())
@@ -110,7 +114,7 @@ func ShortenUrl(c *fiber.Ctx) error {
 
 	ttl, _ := r2.TTL(database.Ctx, c.IP()).Result()
 	resp.XRateReset = ttl / time.Nanosecond / time.Minute
-	
+
 	resp.CustomShort = os.Getenv("DOMAIN") + "/" + id
 
 	return c.Status(fiber.StatusOK).JSON(resp)
