@@ -6,6 +6,7 @@ use (
 	"./CLI Reminder Tool"
 	"./Email Verifier Tool"
 	"./Go-Fibre Simple CRM"
+	./Go-Fiber-Postgres
 	./Golang-Database
 	./Google-Scrapper
 	./Loadbalancer
