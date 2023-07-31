@@ -10,7 +10,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
+	"github.com/go-redis/redis/v8"
 )
 
 type Request struct {
@@ -42,12 +42,7 @@ func ShortenUrl(c *fiber.Ctx) error {
 
 	//if u didn't find any value in the db which means user is using the api for the 1st time
 	if err == redis.Nil {
-		e := r2.Set(database.Ctx, c.IP(), os.Getenv("API_QUOTA"), 30*60*time.Second).Err()
-		if e != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Unable to create new user",
-		})
-	}
+		_ = r2.Set(database.Ctx, c.IP(), os.Getenv("API_QUOTA"), 30*60*time.Second).Err()
 	} else { //user found
 		val, _ = r2.Get(database.Ctx, c.IP()).Result()
 		valInt, _ := strconv.Atoi(val)
@@ -91,7 +86,7 @@ func ShortenUrl(c *fiber.Ctx) error {
 	}
 
 	if body.Expiry == 0 {
-		body.Expiry = 24
+		body.Expiry = 24 //deafult expiry of 24 hours
 	}
 
 	err = r.Set(database.Ctx, id, body.Url, body.Expiry*3600*time.Second).Err()
